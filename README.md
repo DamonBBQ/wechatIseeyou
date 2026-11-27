@@ -2,9 +2,11 @@
 
 **中文** | [English](README_EN.md)
 
-[![GitHub](https://img.shields.io/badge/GitHub-black?logo=github&logoColor=white)](https://github.com/zengtianli/WeChatTweak)
+[![GitHub](https://img.shields.io/badge/GitHub-black?logo=github&logoColor=white)](https://github.com/DamonBBQ/wechatIseeyou)
 [![Upstream](https://img.shields.io/badge/Upstream-sunnyyoung-blue?logo=github&logoColor=white)](https://github.com/sunnyyoung/WeChatTweak)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-green)](LICENSE)
+
+**当前版本：2.5.0** · [更新记录](CHANGELOG.md)
 
 一个用于修改 macOS 微信客户端的命令行工具。
 
@@ -13,7 +15,7 @@
 > `Contents/Resources/wechat.dylib`. **This fork does**: it locates the 4.x patch points, verifies the original
 > bytes before writing anything, and re-signs the bundle **keeping its entitlements** (a bare
 > `codesign --deep --sign -` strips them, and WeChat then refuses to launch on any machine with SIP on).
-> Anti-recall + auto-updater block for selected WeChat builds through `270416` (4.x patches: arm64; Intel for 4.2.0 builds 270390 / 270388 / 270353 / 270352 / 270348 / 270345 and 270135 / 270134 / 270102).
+> Anti-recall + auto-updater block for selected WeChat builds through `270604` (4.x patches: arm64; Intel for 4.2.0 builds 270390 / 270388 / 270353 / 270352 / 270348 / 270345 and 270135 / 270134 / 270102).
 > Prefer a GUI? → **[Unrevoke](https://github.com/zengtianli/WeChatUnrevoke)**.
 
 ---
@@ -32,7 +34,7 @@
 > **本 fork 与上游的关系**：上游 [sunnyyoung/WeChatTweak](https://github.com/sunnyyoung/WeChatTweak)
 > （13.8k★、1.6k fork）**最后一次提交停在 2026 年 2 月**，而微信 4.x 把撤回逻辑整体搬进了
 > `Contents/Resources/wechat.dylib`，它知道的补丁点全部失效。本 fork 从 4.1.10（build 268880）接上，
-> 现已收录至 **build 270416（4.2.0）**（并非覆盖期间每一个构建号；4.x 补丁以 arm64 为主，Intel 见版本表），并且：
+> 现已收录至 **build 270604（4.2.1）**（并非覆盖期间每一个构建号；4.x 补丁以 arm64 为主，Intel 见版本表），并且：
 >
 > - 支持**按目标 dylib** 打补丁（4.x 的逻辑不在主程序里了）
 > - **写入前校验原始字节** —— 打错版本直接报错，不会盲写把微信弄坏
@@ -41,7 +43,7 @@
 
 ## 功能
 
-| 功能 | 说明 | 微信 3.8.x | 微信 4.x（已收录构建，至 270416） |
+| 功能 | 说明 | 微信 3.8.x | 微信 4.x（已收录构建，至 270604） |
 | --- | --- | :---: | :---: |
 | **防撤回（静默变体）** | 别人撤回的消息原样留在聊天里，不弹提示 | ✓ | ✓（当前发布版） |
 | **防撤回（留提示变体）** | 别人的消息留着且有撤回提示；本人撤回按微信原生行为 | ✓ | ✓（`--variant keeptip`，私聊和群聊的验证结果见版本表） |
@@ -81,16 +83,19 @@
 
 工具按 **构建号**（`CFBundleVersion`，即 `wechattweak versions` 打印的数字）匹配，不是营销版本号。
 
+2026-11-27：新增微信 **4.2.1.12（build 270604）** 的 arm64 静默与留提示补丁，以及 8 个自动更新拦截点；`parseRevokeXML` 新签名支持按代覆盖 `off_cbz`。同时加入 M2 / Apple Silicon 主机识别与 `make build-m2` 专用构建。官网 DMG 的临时副本已验证两种变体写入、幂等、恢复和严格签名；270604 的 x86_64 尚未适配，真实聊天撤回仍需账号实测。详见 [CHANGELOG.md](CHANGELOG.md)。
+
 2026-11-22：补丁库新增微信 **4.2.0** 的 7 个构建：官网版 4.2.0.9 / .12 / .16 / .17 / .52 / .54（270345 / 270348 / 270352 / 270353 / 270388 / 270390，arm64 + Intel），以及 270416（arm64，PR #12）。4.2.0.52 起 `parseRevokeXML` 重新编译，`signatures.json` 新增一代（留提示点距静默点 0x7c8），`--auto-locate` 和 `tools/locate_revoke.py` 都能认出。各构建的官方安装包 SHA256 记在 `config.json` 对应条目的 `source` 字段。这是配置更新，使用 GUI 的用户联网退出并重开 WeChatUnrevoke 即可刷新补丁库。Intel 补丁点是对官方安装包 x86_64 部分静态定位的，没有 Intel 真机实测。
 
 2026-10-21：源码补丁库新增 **4.1.15.55 / 270135**，覆盖 arm64 与 x86_64。官方安装包 SHA256 为 `ceea355d5c93419658f777fdd1010f9b19d14fab6dc552af9c208cddad7f248f`；这是配置更新，不是 GUI 新版。下文旧构建的实测仍属历史证据。**34888 / 4.1.7.57** 尚未支持：逻辑位于主程序，三代定位签名均未命中。重新编译同一份补丁库不会增加支持。
 
-当前适配以**微信官网最新稳定版**为准。2026-11-22 核对官网安装包为 **4.2.0.54（build 270390）**，已提供 Apple Silicon 与 Intel 补丁。4.2.0 先后发过多个构建，界面上都显示 4.2.0，补丁地址各不相同，以构建号为准。其他未收录构建建议从[微信官网](https://mac.weixin.qq.com/)更新到这版，再重新打补丁。官网版和 App Store 版的补丁都以各自的构建号为准，即使显示的版本相同，也不能互套地址。
+当前适配以**微信官网最新稳定版**为准。2026-11-27 核对官网安装包为 **4.2.1.12（build 270604）**，已提供 Apple Silicon / arm64 静默与留提示补丁；该构建的 Intel 补丁尚未适配。4.2.1 的补丁地址与 4.2.0 不同，以构建号为准。其他未收录构建建议从[微信官网](https://mac.weixin.qq.com/)更新到已收录版本，再重新打补丁。官网版和 App Store 版的补丁都以各自的构建号为准，即使显示的版本相同，也不能互套地址。
 
 270100 的定位样本是 2026-09-24 从[官网下载地址](https://dldir1.qq.com/weixin/Universal/Mac/WeChatMac.dmg)取得的安装包（2026-09-18 发布），SHA-256 为 `b73319ea3ef7f5f2f6f1403b0bed87ac75b5f5b70f0951ea61bad2d9449857f8`。269631 的定位样本来自[腾讯官方安装包](https://dldir1.qq.com/weixin/Universal/Mac/xWeChatMac_universal_4.1.13.63_269631.dmg)，SHA-256 为 `b247b2cc9dd2122024d6facf9f3c464f2564f106266851d439853bacc7013de9`。270134 的定位样本是 2026-10-10 从腾讯官方地址 `https://dldir1.qq.com/weixin/Universal/Mac/xWeChatMac_universal_4.1.15.54_270134.dmg` 取得的安装包，SHA-256 为 `a51d3f1bc7f47f204865270659806ed32fbb0ff3acade9b8952d4d403682a0b9`；270102 的样本是 `xWeChatMac_universal_4.1.15.22_270102.dmg`，SHA-256 为 `d87de447a43cd2d59aef441d3a8b32aad255427289581afcffc90aee0735dfc2`。270115 的定位样本是 2026-10-15 从 [Mac App Store](https://apps.apple.com/cn/app/id836500024)（中国区，App ID `836500024`）安装的 4.1.15（`CFBundleVersion` 270115），App Store 只提供当前版本，无法按构建号下载历史版本，核对前请先用 `wechattweak versions` 确认构建号；样本为打补丁前自动留存的 `wechat.dylib.270115.bak`（Apple Mac OS Application Signing 签名，Team ID `5A4RE8SF68`），整份 universal dylib 的 SHA-256 为 `960222a9872c89a8ce14567427f2bb3e715435adbbd8723465ff7c253bb8fb30`，其中原始 arm64 切片（`lipo -thin arm64`，fat 偏移 `181452800`，长 `169368160` 字节）的 SHA-256 为 `6d3feb56043cb63d2ff3f77aa32115abbfe7a2f28b3ab1ab59886ee625703e4b`。使用 GUI 的用户联网退出并重开 WeChatUnrevoke 即可刷新补丁库，无需为此次配置更新重新安装 GUI。微信升级会清除补丁，升级后仍需重新开启并检查保护。
 
 | 构建号 | 微信版本 | 防撤回 | 阻止自动更新 |
 | --- | --- | :---: | :---: |
+| 270604 | 4.2.1.12 官网版，arm64 | 官方安装包临时副本上验证静默、留提示、重复写入、恢复和严格签名；补丁点全部还原为原始字节。真实聊天撤回待账号实测 | 8 个更新点，写入后体检通过 |
 | 270416 | 4.2.0，arm64（安装包未公开存档） | 贡献者真机验证（PR #12）。`keeptip` 对本人撤回保留真实 ID、按微信原生处理，他人撤回仍清零 ID 保留消息和提示；英文界面的本人撤回待复测 | 8 个更新点（贡献者定位） |
 | 270390 | 4.2.0.54 官网版，arm64 + Intel | 贡献者在开启 SIP 的 Mac 上验证静默、留提示、双向切换、严格签名校验和还原（PR #13），合并后在官方安装包副本上复跑通过；Intel 仅 keeptip。真实聊天撤回待实测 | 两架构各 8 处，写入后体检通过 |
 | 270388 | 4.2.0.52 官网版，arm64 + Intel | 官方安装包副本上验证两种变体写入、重复写入、双向切换、体检、严格签名校验，还原后全部补丁点与原包逐字节一致；Intel 仅 keeptip。真实聊天和 Intel 真机未测 | 两架构各 8 处，同上 |
@@ -133,15 +138,15 @@ sudo wechattweak restore    # 想还原
 brew uninstall sunnyyoung/tap/wechattweak || brew uninstall wechattweak
 ```
 
-补丁库（`config.json`）在运行时从本仓 `master` 拉，所以微信出新版本被收录后，
+补丁库（`config.json`）在运行时从本仓 `main` 拉，所以微信出新版本被收录后，
 **不用升级这个 formula**。
 
 ### 微信 4.x（从源码构建）
 
 ```bash
 # 1. 克隆本 fork
-git clone https://github.com/zengtianli/WeChatTweak.git
-cd WeChatTweak
+git clone https://github.com/DamonBBQ/wechatIseeyou.git
+cd wechatIseeyou
 
 # 2. 编译
 swift build -c release
@@ -171,6 +176,21 @@ pkill -x WeChat
 .build/release/wechattweak doctor --json
 ```
 
+### M2 / Apple Silicon 构建
+
+M2、M2 Pro、M2 Max、M2 Ultra 都使用 `arm64` 切片，不需要另一套补丁引擎。`make build-m2` 会生成
+Apple Silicon 专用二进制；`make build` 仍生成同时包含 `arm64` 和 `x86_64` 的 universal 版本。
+
+```bash
+make build-m2
+./wechattweak-m2 doctor
+./wechattweak-m2 doctor --json
+```
+
+`patch` 会先打印处理器、机型和分析架构；`doctor` 额外显示 `Platform`，`doctor --json` 提供
+`chip`、`model`、`is_m2` 和 `host_arch`。是否支持仍以微信 `CFBundleVersion` 和对应的 `arm64`
+补丁点为准，M2 不会绕过 expected 字节校验。
+
 > **`restore` 的安全边界**：反演规则是「写回 `expected[0]`」，同时接受「已打补丁」和「已是原始」
 > 两种入口，所以连跑两次是幂等的；遇到既不是原始也不是本工具写的字节（别的工具改过）会报
 > `expectedMismatch` 拒写。**五个远古 3.8.x 构建号的 config 条目没有 `expected` 字段**，
@@ -181,7 +201,7 @@ pkill -x WeChat
 > 消费方（如 [Unrevoke](https://github.com/zengtianli/WeChatUnrevoke)）**只解码不重新推导** ——
 > 两边各推一遍，改这个文件那天就会给出不同答案。
 > 同一份 JSON 还给出 `full_version`（微信「关于」里的四段版本号，如 `4.1.15.54`）、`short_version`、
-> `install_channel`（`appStore` / `direct`）、`host_arch`、`arch_supported` 和 `write_blockers`。
+> `install_channel`（`appStore` / `direct`）、`host_arch`、`chip`、`model`、`is_m2`、`arch_supported` 和 `write_blockers`。
 
 > **按处理器架构判断，不按「认不认识这个构建号」**：`wechat.dylib` 是通用二进制，一台 Mac 只运行其中一个
 > 切片。补丁库里某个构建只有 arm64 补丁点时，Intel Mac 上 `doctor` 报 `unsupportedBuild`

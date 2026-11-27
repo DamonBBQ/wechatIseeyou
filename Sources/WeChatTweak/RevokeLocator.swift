@@ -8,8 +8,8 @@
 //
 //  The signatures are the same ones `tools/locate_revoke.py` uses: the entry `E` of
 //  `parseRevokeXML` satisfies
-//      E+0x270         == `cbz w0, SKIP`                  ← silent patch point
-//      E+0x270+delta   == `str <Xt>,[x19,#newmsgid]`      ← keeptip patch point
+//      E+s.offCbz         == `cbz w0, SKIP`                  ← silent patch point
+//      E+s.offCbz+delta   == `str <Xt>,[x19,#newmsgid]`      ← keeptip patch point
 //  WeChat recompiles this function every few releases, which changes the cbz
 //  displacement / the newmsgid field offset / delta — one "generation" each.
 //  All known generations are tabulated in `signatures.json` (repo root, the SSOT;
@@ -49,6 +49,8 @@ struct RevokeLocator {
         let name: String
         /// Human-readable build range this generation was observed on.
         let builds: String
+        /// Distance from the function entry to the silent patch point.
+        let offCbz: UInt64
         /// Pristine `cbz w0, SKIP` bytes at the silent patch point (config.json spelling, big-endian hex).
         let cbzHex: String
         /// `b SKIP` the silent variant writes there.

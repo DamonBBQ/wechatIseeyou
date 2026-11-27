@@ -6,7 +6,7 @@ import XCTest
 final class SignaturesSyncTests: XCTestCase {
     private struct Doc: Decodable {
         struct Gen: Decodable {
-            let name: String, builds: String, cbz: String, b: String, delta: String, str_x0: String, str_xzr: String, field: String
+            let name: String, builds: String, off_cbz: String?, cbz: String, b: String, delta: String, str_x0: String, str_xzr: String, field: String
         }
         struct Accessor: Decodable { let getter: String, setter: String }
         struct Update: Decodable {
@@ -30,6 +30,7 @@ final class SignaturesSyncTests: XCTestCase {
         for (g, s) in zip(doc.generations, RevokeLocator.signatures) {
             XCTAssertEqual(g.name, s.name)
             XCTAssertEqual(g.builds, s.builds)
+            XCTAssertEqual(UInt64((g.off_cbz ?? doc.off_cbz).dropFirst(2), radix: 16), s.offCbz)
             XCTAssertEqual(g.cbz, s.cbzHex)
             XCTAssertEqual(g.b, s.branchHex)
             XCTAssertEqual(UInt64(g.delta.dropFirst(2), radix: 16), s.delta)

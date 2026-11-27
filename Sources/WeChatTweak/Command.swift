@@ -85,15 +85,7 @@ struct Command {
     /// `WECHATTWEAK_HOST_ARCH=x86_64|arm64` overrides the probe: for WeChat forced to run
     /// under Rosetta, and for exercising the Intel path on Apple silicon.
     static var hostArch: Config.Arch {
-        if let forced = ProcessInfo.processInfo.environment["WECHATTWEAK_HOST_ARCH"],
-           let arch = Config.Arch(rawValue: forced) {
-            return arch
-        }
-        var value: Int32 = 0
-        var size = MemoryLayout<Int32>.size
-        // Reports the hardware even when this process is translated by Rosetta.
-        if sysctlbyname("hw.optional.arm64", &value, &size, nil, 0) == 0, value == 1 { return .arm64 }
-        return .x86_64
+        HostPlatform.current().architecture
     }
     static func supports(_ arch: Config.Arch, _ targets: [Config.Target]) -> Bool {
         targets.contains { $0.entries.contains { $0.arch == arch } }

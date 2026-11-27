@@ -56,6 +56,12 @@ struct Doctor {
         var installChannel: String
         /// The architecture WeChat runs as on this Mac; patch state below is judged on that slice.
         var hostArch: String
+        /// Processor brand, e.g. "Apple M2 Pro"; nil when macOS does not expose it.
+        var chip: String?
+        /// Hardware model, e.g. "Mac14,12".
+        var model: String?
+        /// true for M2 / M2 Pro / M2 Max / M2 Ultra hardware.
+        var isM2: Bool
         /// false → config.json knows this build, but has no anti-revoke patch points for `hostArch`.
         var archSupported: Bool
         var appPath: String
@@ -117,6 +123,7 @@ struct Doctor {
 
     static func run(app: URL, configs: [Config], hostArch: Config.Arch = Command.hostArch) async throws -> Report {
         let fm = FileManager.default
+        let host = HostPlatform.current()
         var lines: [String] = []
 
         // 1. build + config
@@ -126,6 +133,7 @@ struct Doctor {
         let channel = Command.installChannel(app: app)
         lines.append("WeChat build: \(version ?? "unknown")  (\(app.path))")
         lines.append("Version:      \(versions.full ?? versions.short ?? "unknown")  channel=\(channel)  arch=\(hostArch.rawValue)")
+        lines.append("Platform:     \(host.summary)")
         lines.append("config.json:  \(config == nil ? "NO entry for this build" : "matched (\(config!.targets.map(\.identifier).joined(separator: ", ")))")")
 
         // 2. SIP
@@ -320,6 +328,9 @@ struct Doctor {
             shortVersion: versions.short,
             installChannel: channel,
             hostArch: hostArch.rawValue,
+            chip: host.chip,
+            model: host.model,
+            isM2: host.isM2,
             archSupported: !revokeArchMissing,
             appPath: app.path,
             bundleID: bundleID,

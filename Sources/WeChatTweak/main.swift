@@ -73,6 +73,8 @@ extension Tweak {
             if Command.isRunning(app: options.app) {
                 throw Error.appRunning
             }
+            print("------ Host ------")
+            print(HostPlatform.current().summary)
             print("------ Version ------")
             let version = try await Command.version(app: options.app)
             print("WeChat version: \(version ?? "unknown")")
@@ -290,7 +292,7 @@ struct Tweak: AsyncParsableCommand {
         /// `tools/locate_revoke.py --append` is picked up without having to pass `-c`.
         /// Search order: current directory, then walk up from the executable's directory
         /// (covers `.build/release/wechattweak` → repo root). Only when no local file is
-        /// found do we fall back to the fork's remote master config.json (e.g. running a
+        /// found do we fall back to this repository's remote main config.json (e.g. running a
         /// bare prebuilt binary outside any checkout).
         private static func resolveDefaultConfig() -> URL {
             let fm = FileManager.default
@@ -311,7 +313,7 @@ struct Tweak: AsyncParsableCommand {
                     return candidate
                 }
             }
-            return URL(string: "https://raw.githubusercontent.com/zengtianli/WeChatTweak/refs/heads/master/config.json")!
+            return URL(string: "https://raw.githubusercontent.com/DamonBBQ/wechatIseeyou/refs/heads/main/config.json")!
         }
     }
 

@@ -3,7 +3,7 @@
 locate_revoke.py — 自动定位微信 4.x 防撤回补丁点，为任意构建号生成 config.json 条目。
 
 背景：撤回补丁点每个构建号地址都变，但几何特征在同一「代」内不变——
-`parseRevokeXML` 入口 E 满足：E+0x270 处是 `cbz w0`、再往后固定距离处是
+`parseRevokeXML` 入口 E 满足：E+g.off_cbz 处是 `cbz w0`、再往后固定距离处是
 `str x0,[x19,#newmsgid]`。扫这组签名（两个锚点同时命中且全片唯一）即可定位。
 微信每次重编译该函数会换一代签名（cbz 跳转距离 / newmsgid 字段偏移变），
 已知各代见仓库根 signatures.json（SSOT；数据来源：fzlzjerry/wechat-antirecall patches.json 全量归纳，
@@ -44,6 +44,7 @@ def load_generations(path=SIGNATURES_JSON):
     for g in doc["generations"]:
         g = dict(g)
         g["delta"] = int(g["delta"], 16)
+        g["off_cbz"] = int(g.get("off_cbz", doc["off_cbz"]), 16)
         g["field"] = int(g["field"], 16)
         g["cbz_word"] = _le_word(g["cbz"])
         g["b_word"] = _le_word(g["b"])
@@ -186,8 +187,8 @@ def main():
     va = fileoff_to_va(segs, fo)
     if va is None:
         raise SystemExit("命中偏移 0x%x 不在任何段内，异常。" % fo)
-    entry_e = va - OFF_CBZ
-    stp_ok = is_stp_prologue(sl, fo - OFF_CBZ)
+    entry_e = va - gen["off_cbz"]
+    stp_ok = is_stp_prologue(sl, fo - gen["off_cbz"])
 
     va_tip = va + DELTA
     str_word = struct.unpack("<I", sl[fo + DELTA:fo + DELTA + 4])[0]
@@ -198,8 +199,8 @@ def main():
     print("微信构建号 (CFBundleVersion): %s" % (build or "未知（用 --app 指向 App 可自动读取）"))
     print("命中签名代:                   %s（newmsgid 字段 [x19,#0x%x]）" % (gen["name"], gen["field"]))
     print("parseRevokeXML 入口 E:        0x%x" % entry_e)
-    print("silent 补丁点 VA (E+0x270):   0x%x  原字节 %s → 写 %s" % (va, gen["cbz"], PATCH_ASM))
-    print("keeptip 补丁点 VA (E+0x%x):  0x%x  当前字节 %s（%s）" % (OFF_CBZ + DELTA, va_tip, str_hex, str_state))
+    print("silent 补丁点 VA (E+0x%x):   0x%x  原字节 %s → 写 %s" % (gen["off_cbz"], va, gen["cbz"], PATCH_ASM))
+    print("keeptip 补丁点 VA (E+0x%x):  0x%x  当前字节 %s（%s）" % (gen["off_cbz"] + DELTA, va_tip, str_hex, str_state))
     print("入口 stp 序言弱校验:          %s" % ("通过" if stp_ok else "未匹配（仅提示，不影响双点签名唯一命中）"))
     print()
 

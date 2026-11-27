@@ -25,8 +25,8 @@ def render(doc):
         "    static let signatures: [Signature] = [",
     ]
     for g in doc["generations"]:
-        lines.append('        Signature(name: "%s", builds: "%s", cbzHex: "%s", branchHex: "%s", delta: %s, strX0Hex: "%s", strXzrHex: "%s", field: %s),'
-                     % (g["name"], g["builds"], g["cbz"], g["b"], g["delta"], g["str_x0"], g["str_xzr"], g["field"]))
+        lines.append('        Signature(name: "%s", builds: "%s", offCbz: %s, cbzHex: "%s", branchHex: "%s", delta: %s, strX0Hex: "%s", strXzrHex: "%s", field: %s),'
+                     % (g["name"], g["builds"], g.get("off_cbz", doc["off_cbz"]), g["cbz"], g["b"], g["delta"], g["str_x0"], g["str_xzr"], g["field"]))
     lines += ["    ]", "}", ""]
     u = doc["update"]
     lines += [
